@@ -1,19 +1,36 @@
-const { Client, GatewayIntentBits, Partials } = require("discord.js")
+```
+const Discord = require('discord.js');
+const client = new Discord.Client();
+const token = 'YOUR_BOT_TOKEN';
+const prefix = '.';
 
-const client = new Client({ intents: [Object.values(GatewayIntentBits)], partials: [Object.values(Partials)] })
+client.on('ready', () => {
+    console.log(`Logged in as ${client.user.tag}!`);
+});
 
-client.on("ready", async() => {
+client.on('message', async message => {
+    if (message.content.startsWith(`${prefix}unbanall`)) {
+        if (!message.guild) return message.reply('This command can only be used in a server.');
+        if (!message.member.hasPermission('BAN_MEMBERS')) return message.reply('You do not have permission to unban members.');
 
-    const guild = await client.guilds.cache.get("1214280471496892516")
+        try {
+            const bans = await message.guild.fetchBans();
+            if (bans.size === 0) return message.reply('There are no banned users.');
 
-    guild.bans.fetch().then(bans => {
-        bans.forEach(ban => {
+            bans.forEach(async ban => {
+                try {
+                    await message.guild.unban(ban.user);
+                    message.channel.send(`Unbanned ${ban.user.tag}`);
+                } catch (err) {
+                    console.error(err);
+                    message.channel.send(`Failed to unban ${ban.user.tag}`);
+                }
+            });
+        } catch (err) {
+            console.error(err);
+            message.reply('Failed to fetch bans.');
+        }
+    }
+});
 
-            guild.members.unban(ban.user.id)
-            console.log("aÃ§tÄ±m: " + ban.user.username)
-
-        })
-    })
-})
-
-client.login(process.env.token)
+client.login(process.env.token);```
